@@ -1,0 +1,15 @@
+# Python (Backend)
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+
+# React (Frontend)
+frontend/node_modules/
+frontend/dist/
+
+# Environment variables (Parole/Chei secrete)
+.env
+
+# Windows/OS files
+.DS_Store
+Thumbs.db
