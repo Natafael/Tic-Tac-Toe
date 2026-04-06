@@ -155,14 +155,14 @@ function App() {
 
   if (conflictUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-900 flex items-center justify-center text-white p-4 py-8">
+      <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-800 to-indigo-900 flex items-center justify-center text-white p-4 py-8">
         <div className="bg-white/10 backdrop-blur-lg p-8 rounded-3xl shadow-2xl border border-white/20 w-full max-w-md text-center">
           <div className="mb-8">
             <h2 className="text-4xl font-extrabold mb-4">Oops! 🚨</h2>
             <p className="text-indigo-200">Ești deja conectat cu contul <span className="font-bold text-white">{conflictUser.username}</span> pe un alt dispozitiv.</p>
           </div>
           <div className="space-y-4">
-            <button onClick={() => handleAuth('login', true)} className="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-400 hover:to-pink-500 py-4 rounded-xl font-bold shadow-lg">Switch here (Închide cealaltă sesiune)</button>
+            <button onClick={() => handleAuth('login', true)} className="w-full bg-linear-to-r from-red-500 to-pink-600 hover:from-red-400 hover:to-pink-500 py-4 rounded-xl font-bold shadow-lg">Switch here (Închide cealaltă sesiune)</button>
             <button onClick={() => { setConflictUser(null); setUsername(''); setPassword(''); }} className="w-full bg-white/10 hover:bg-white/20 py-4 rounded-xl font-bold border border-white/20">Login with another account</button>
           </div>
         </div>
@@ -198,7 +198,7 @@ function App() {
     const visibleMessages = messages.filter(msg => msg.chat_type === myRole);
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center text-white p-4 py-8">
+      <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center text-white p-4 py-8">
         <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
           {/* COLOANA 1: SCOR */}
@@ -209,14 +209,14 @@ function App() {
               <div className={`p-4 rounded-2xl flex justify-between items-center transition-all ${mySymbol === 'X' ? 'bg-blue-500/20 border border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'bg-white/5 border border-white/10'}`}>
                 <div className="flex flex-col">
                   <span className="text-xs text-indigo-300 font-bold uppercase tracking-wider">Jucător (X)</span>
-                  <span className="font-bold text-lg truncate max-w-[120px]">{players.X || 'Așteptare...'}</span>
+                  <span className="font-bold text-lg truncate max-w-30">{players.X || 'Așteptare...'}</span>
                 </div>
                 <span className="text-4xl font-black text-blue-400">{scores.X}</span>
               </div>
               <div className={`p-4 rounded-2xl flex justify-between items-center transition-all ${mySymbol === 'O' ? 'bg-red-500/20 border border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-white/5 border border-white/10'}`}>
                 <div className="flex flex-col">
                   <span className="text-xs text-indigo-300 font-bold uppercase tracking-wider">Jucător (O)</span>
-                  <span className="font-bold text-lg truncate max-w-[120px]">{players.O || 'Așteptare...'}</span>
+                  <span className="font-bold text-lg truncate max-w-30">{players.O || 'Așteptare...'}</span>
                 </div>
                 <span className="text-4xl font-black text-red-400">{scores.O}</span>
               </div>
@@ -238,7 +238,7 @@ function App() {
             </div>
             <p className={`mb-6 text-2xl font-bold ${winner ? 'text-green-400 animate-bounce' : isRoomFull ? 'text-indigo-200' : 'text-gray-400 animate-pulse'}`}>{statusMessage}</p>
             
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full aspect-square p-4 sm:p-6 bg-white/5 rounded-2xl border border-white/10 mx-auto max-w-[450px]">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full aspect-square p-4 sm:p-6 bg-white/5 rounded-2xl border border-white/10 mx-auto max-w-112.5">
               {board.map((value, index) => {
                 const isOldest = (value === 'X' && index === oldestXMove) || (value === 'O' && index === oldestOMove);
                 return (
@@ -257,13 +257,13 @@ function App() {
                   const emptyBoard = Array(9).fill(null); const nextGameXStarts = !xStartedThisGame; 
                   setBoard(emptyBoard); setXIsNext(nextGameXStarts); setXMoves([]); setOMoves([]); setXStartedThisGame(nextGameXStarts);
                   socket.emit('move', { room: roomCode, board: emptyBoard, xIsNext: nextGameXStarts, xMoves: [], oMoves: [], xStarted: nextGameXStarts, scores: scores });
-                }} className="mt-6 w-full max-w-[450px] mx-auto bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 py-4 rounded-xl font-bold text-lg shadow-lg transform transition active:scale-95"
+                }} className="mt-6 w-full max-w-112.5 mx-auto bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 py-4 rounded-xl font-bold text-lg shadow-lg transform transition active:scale-95"
               >Joacă din nou (Schimbă rândul)</button>
             )}
           </div>
 
           {/* COLOANA 3: CHAT */}
-          <div className="lg:col-span-3 bg-white/10 backdrop-blur-lg p-6 rounded-3xl border border-white/20 shadow-2xl flex flex-col h-full min-h-[500px]">
+          <div className="lg:col-span-3 bg-white/10 backdrop-blur-lg p-6 rounded-3xl border border-white/20 shadow-2xl flex flex-col h-full min-h-125">
             <h2 className="text-2xl font-extrabold mb-4 text-center text-indigo-200">
               Live Chat <span className="block text-sm font-normal opacity-70">{myRole === 'spectator' ? '(Doar Spectatori)' : '(Doar Jucători)'}</span>
             </h2>
@@ -275,7 +275,7 @@ function App() {
                 visibleMessages.map((msg, i) => (
                   <div key={i} className={`flex flex-col ${msg.username === playerData ? 'items-end' : 'items-start'}`}>
                     <span className="text-[11px] font-bold text-indigo-300 mb-1 px-1">{msg.username}</span>
-                    <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[85%] break-words shadow-md ${msg.username === playerData ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-tr-none' : 'bg-white/15 text-white rounded-tl-none border border-white/10'}`}>
+                    <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[85%] wrap-break-word shadow-md ${msg.username === playerData ? 'bg-linear-to-r from-purple-600 to-indigo-600 text-white rounded-tr-none' : 'bg-white/15 text-white rounded-tl-none border border-white/10'}`}>
                       {msg.text}
                     </div>
                   </div>
@@ -310,7 +310,7 @@ function App() {
   // ECRANUL 2: LOBBY
   if (isLoggedIn && !inRoom) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center text-white p-4 py-8">
+      <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center text-white p-4 py-8">
         <div className="bg-white/10 backdrop-blur-lg p-8 rounded-3xl shadow-2xl border border-white/20 w-full max-w-md text-center">
           <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
             <h1 className="text-2xl font-extrabold">Lobby</h1>
@@ -324,14 +324,14 @@ function App() {
               <button 
                 onClick={() => handleJoinRoom('player')} 
                 disabled={isRoomFullLobby}
-                className={`w-full py-4 rounded-xl font-bold text-sm shadow-lg transition-all ${isRoomFullLobby ? 'bg-gray-500/30 text-gray-400 cursor-not-allowed border border-gray-500/30' : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500'}`}
+                className={`w-full py-4 rounded-xl font-bold text-sm shadow-lg transition-all ${isRoomFullLobby ? 'bg-gray-500/30 text-gray-400 cursor-not-allowed border border-gray-500/30' : 'bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500'}`}
               >
                 {isRoomFullLobby ? 'Jucători Pli' : 'Intră ca Jucător'}
               </button>
               
               <button 
                 onClick={() => handleJoinRoom('spectator')} 
-                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 py-4 rounded-xl font-bold text-sm shadow-lg transition-all"
+                className="w-full bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 py-4 rounded-xl font-bold text-sm shadow-lg transition-all"
               >
                 Intră Spectator
               </button>
@@ -345,7 +345,7 @@ function App() {
 
   // ECRANUL 1: AUTENTIFICARE
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-900 flex items-center justify-center text-white p-4 py-8">
+    <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-800 to-indigo-900 flex items-center justify-center text-white p-4 py-8">
       <div className="bg-white/10 backdrop-blur-lg p-8 rounded-3xl shadow-2xl border border-white/20 w-full max-w-md">
         <div className="text-center mb-8"><h1 className="text-4xl font-extrabold tracking-tight mb-2">Tic-Tac-Toe</h1><p className="text-indigo-200">Proiect Erasmus 2026</p></div>
         <div className="space-y-4">
@@ -386,7 +386,7 @@ function App() {
           
           <div className="flex gap-4 pt-4">
             <button onClick={() => handleAuth('login')} className="w-full bg-white/10 hover:bg-white/20 py-3 rounded-xl font-bold text-md border border-white/20 transition-all active:scale-95">Logare</button>
-            <button onClick={() => handleAuth('register')} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 py-3 rounded-xl font-bold text-md transition-all active:scale-95">Creare Cont</button>
+            <button onClick={() => handleAuth('register')} className="w-full bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 py-3 rounded-xl font-bold text-md transition-all active:scale-95">Creare Cont</button>
           </div>
         </div>
         {message && <div className="mt-6 p-3 rounded-lg text-center text-sm font-medium bg-red-500/20 text-red-200">{message}</div>}
