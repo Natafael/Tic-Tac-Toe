@@ -4,6 +4,7 @@ from config import Config
 from models import db, User
 from flask_socketio import SocketIO
 from flask_cors import CORS
+from flask_socketio import join_room, leave_room, emit
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -60,6 +61,43 @@ def login():
         return jsonify({"message": f"Bine ai revenit, {username}!", "user_id": user.id}), 200
     else:
         return jsonify({"error": "Nume de utilizator sau parolă incorectă!"}), 401
+
+# --- LOGICA MULTIPLAYER (SOCKET.IO) ---
+rooms_data = {}
+
+@socketio.on('join')
+def on_join(data):
+    room = data['room']
+    username = data['username']
+    join_room(room)
+    
+    # Dacă camera nu există încă, o creăm și primul jucător devine X
+    if room not in rooms_data:
+        rooms_data[room] = {'X': username, 'O': None}
+        my_symbol = 'X'
+    else:
+        # Dacă există camera, dar locul lui O e liber
+        if rooms_data[room]['O'] is None and rooms_data[room]['X'] != username:
+            rooms_data[room]['O'] = username
+            my_symbol = 'O'
+        # Dacă jucătorul a dat refresh la pagină, îi dăm simbolul înapoi
+        elif rooms_data[room]['X'] == username:
+            my_symbol = 'X'
+        elif rooms_data[room]['O'] == username:
+            my_symbol = 'O'
+        else:
+            my_symbol = 'Spectator' # Al treilea om care intră e spectator
+
+    # Îi spunem DOAR persoanei care abia a intrat ce simbol a primit (folosind request.sid)
+    emit('assign_symbol', {'symbol': my_symbol}, to=request.sid)
+    
+    # Anunțăm PE TOATĂ LUMEA din cameră cine sunt jucătorii ca să le afișăm numele
+    emit('room_players', rooms_data[room], to=room)
+
+@socketio.on('move')
+def on_move(data):
+    room = data['room']
+    emit('update_board', data, to=room)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)
