@@ -41,8 +41,9 @@ function App() {
   const [isRoomFullLobby, setIsRoomFullLobby] = useState(false)
 
   useEffect(() => {
+    // Am adăugat trim() pentru siguranță când verificăm statusul
     if (roomCode.trim() !== '' && isLoggedIn && !inRoom) {
-      fetch(`http://127.0.0.1:5000/room_status/${roomCode}`)
+      fetch(`http://127.0.0.1:5000/room_status/${roomCode.trim()}`)
         .then(res => res.json())
         .then(data => setIsRoomFullLobby(data.is_full))
         .catch(() => setIsRoomFullLobby(false));
@@ -75,7 +76,7 @@ function App() {
       setIsLoggedIn(false); setInRoom(false); setRoomCode(''); setBoard(Array(9).fill(null));
       setXMoves([]); setOMoves([]); setMySymbol(null); setPlayers({ X: null, O: null, spectatorCount: 0 });
       setConflictUser(null); setMessages([]); setScores({ X: 0, O: 0 }); socket.disconnect();
-      setMessage("Sesiune încheiată! Contul a fost accesat de pe alt dispozitiv.");
+      setMessage("Session closed. Your account has been accessed from another device.");
     });
 
     return () => {
@@ -89,7 +90,7 @@ function App() {
   }, [messages]);
 
   const handleAuth = async (endpoint, force = false) => {
-    if (!username || !password) { setMessage("Te rog introdu un nume și o parolă!"); return; }
+    if (!username || !password) { setMessage("Please insert username and password!"); return; }
     try {
       const response = await fetch(`http://127.0.0.1:5000/${endpoint}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -102,13 +103,15 @@ function App() {
       const data = await response.json()
       if (response.ok) {
         setConflictUser(null); setPlayerData(username); setIsLoggedIn(true);     
-      } else { setMessage(`Eroare: ${data.error}`); }
-    } catch (error) { setMessage("Eroare: Serverul Backend nu este pornit!"); }
+      } else { setMessage(`Error: ${data.error}`); }
+    } catch (error) { setMessage("Error: Backend server is not running!"); }
   }
 
   const handleJoinRoom = (role) => {
-    if (!roomCode) { setMessage("Introdu un cod de cameră!"); return; }
-    socket.emit('join', { room: roomCode, username: playerData, role: role });
+    const cleanCode = roomCode.trim(); // Ne asigurăm că nu există spații invizibile
+    if (!cleanCode) { setMessage("Insert room code!"); return; }
+    socket.emit('join', { room: cleanCode, username: playerData, role: role });
+    setRoomCode(cleanCode); // Salvăm codul curat
     setInRoom(true); setMessage('');
   }
 
@@ -155,14 +158,14 @@ function App() {
 
   if (conflictUser) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-800 to-indigo-900 flex items-center justify-center text-white p-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-900 flex items-center justify-center text-white p-4 py-8">
         <div className="bg-white/10 backdrop-blur-lg p-8 rounded-3xl shadow-2xl border border-white/20 w-full max-w-md text-center">
           <div className="mb-8">
             <h2 className="text-4xl font-extrabold mb-4">Oops! 🚨</h2>
-            <p className="text-indigo-200">Ești deja conectat cu contul <span className="font-bold text-white">{conflictUser.username}</span> pe un alt dispozitiv.</p>
+            <p className="text-indigo-200">You are already logged in with <span className="font-bold text-white">{conflictUser.username}</span> on another device.</p>
           </div>
           <div className="space-y-4">
-            <button onClick={() => handleAuth('login', true)} className="w-full bg-linear-to-r from-red-500 to-pink-600 hover:from-red-400 hover:to-pink-500 py-4 rounded-xl font-bold shadow-lg">Switch here (Închide cealaltă sesiune)</button>
+            <button onClick={() => handleAuth('login', true)} className="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-400 hover:to-pink-500 py-4 rounded-xl font-bold shadow-lg">Switch here</button>
             <button onClick={() => { setConflictUser(null); setUsername(''); setPassword(''); }} className="w-full bg-white/10 hover:bg-white/20 py-4 rounded-xl font-bold border border-white/20">Login with another account</button>
           </div>
         </div>
@@ -181,16 +184,16 @@ function App() {
 
     let statusMessage;
     if (winner) {
-      statusMessage = `🎉 Câștigător: ${players[winner] || winner}!`;
+      statusMessage = `🎉 Winner: ${players[winner] || winner}!`;
     } else if (isDraw) {
-      statusMessage = "🤝 Remiză!";
+      statusMessage = "🤝 Draw!";
     } else if (!isRoomFull) {
-      statusMessage = "⏳ Așteptăm adversarul...";
+      statusMessage = "⏳ Waiting for the opponent...";
     } else {
       if (mySymbol === 'Spectator') {
-        statusMessage = `Rândul lui ${currentTurnName}`;
+        statusMessage = `${currentTurnName}'s turn`;
       } else {
-        statusMessage = mySymbol === currentTurnSymbol ? "E rândul tău!" : `Așteaptă... e rândul lui ${currentTurnName}`;
+        statusMessage = mySymbol === currentTurnSymbol ? "Your turn!" : `Wait... ${currentTurnName}'s turn`;
       }
     }
 
@@ -198,47 +201,47 @@ function App() {
     const visibleMessages = messages.filter(msg => msg.chat_type === myRole);
 
     return (
-      <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center text-white p-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center text-white p-4 py-8">
         <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
-          {/* COLOANA 1: SCOR */}
+          {/* COLUMN 1: SCORE */}
           <div className="lg:col-span-3 bg-white/10 backdrop-blur-lg p-6 rounded-3xl border border-white/20 shadow-2xl flex flex-col h-full">
-            <h2 className="text-2xl font-extrabold mb-6 text-center text-indigo-200">Tabelă Scor</h2>
+            <h2 className="text-2xl font-extrabold mb-6 text-center text-indigo-200">Score Board</h2>
             
             <div className="flex flex-col gap-4 flex-1">
               <div className={`p-4 rounded-2xl flex justify-between items-center transition-all ${mySymbol === 'X' ? 'bg-blue-500/20 border border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'bg-white/5 border border-white/10'}`}>
                 <div className="flex flex-col">
-                  <span className="text-xs text-indigo-300 font-bold uppercase tracking-wider">Jucător (X)</span>
-                  <span className="font-bold text-lg truncate max-w-30">{players.X || 'Așteptare...'}</span>
+                  <span className="text-xs text-indigo-300 font-bold uppercase tracking-wider">Player (X)</span>
+                  <span className="font-bold text-lg truncate max-w-[120px]">{players.X || 'Waiting...'}</span>
                 </div>
                 <span className="text-4xl font-black text-blue-400">{scores.X}</span>
               </div>
               <div className={`p-4 rounded-2xl flex justify-between items-center transition-all ${mySymbol === 'O' ? 'bg-red-500/20 border border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-white/5 border border-white/10'}`}>
                 <div className="flex flex-col">
-                  <span className="text-xs text-indigo-300 font-bold uppercase tracking-wider">Jucător (O)</span>
-                  <span className="font-bold text-lg truncate max-w-30">{players.O || 'Așteptare...'}</span>
+                  <span className="text-xs text-indigo-300 font-bold uppercase tracking-wider">Player (O)</span>
+                  <span className="font-bold text-lg truncate max-w-[120px]">{players.O || 'Waiting...'}</span>
                 </div>
                 <span className="text-4xl font-black text-red-400">{scores.O}</span>
               </div>
               
               <div className="mt-4 bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center">
-                <span className="text-sm text-indigo-300 font-bold uppercase tracking-wider">👁️ Spectatori</span>
+                <span className="text-sm text-indigo-300 font-bold uppercase tracking-wider">👁️ Spectators</span>
                 <span className="font-bold text-2xl text-cyan-400">{players.spectatorCount || 0}</span>
               </div>
             </div>
 
-            <button onClick={handleLeaveRoom} className="mt-8 w-full bg-red-500/10 hover:bg-red-500/30 text-red-300 py-3 rounded-xl font-bold transition-all border border-red-500/20 active:scale-95">Ieși din cameră</button>
+            <button onClick={handleLeaveRoom} className="mt-8 w-full bg-red-500/10 hover:bg-red-500/30 text-red-300 py-3 rounded-xl font-bold transition-all border border-red-500/20 active:scale-95">Leave room</button>
           </div>
 
-          {/* COLOANA 2: TABLA DE JOC */}
+          {/* COLUMN 2: GAME BOARD */}
           <div className={`lg:col-span-6 bg-white/10 backdrop-blur-lg p-6 sm:p-8 rounded-3xl shadow-2xl text-center transition-all duration-500 border-4 flex flex-col justify-center h-full ${isRoomFull ? 'border-green-500/50 shadow-[0_0_30px_rgba(34,197,94,0.3)]' : 'border-gray-400/30 border-dashed'}`}>
             <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-4">
-              <h1 className="text-xl font-bold">{playerData} <span className="text-sm font-normal opacity-80">(Tu ești {mySymbol})</span></h1>
-              <span className="bg-white/20 px-4 py-1.5 rounded-full text-sm font-mono font-bold tracking-widest">CAMERĂ: {roomCode}</span>
+              <h1 className="text-xl font-bold">{playerData} <span className="text-sm font-normal opacity-80">(You are {mySymbol})</span></h1>
+              <span className="bg-white/20 px-4 py-1.5 rounded-full text-sm font-mono font-bold tracking-widest">ROOM: {roomCode}</span>
             </div>
             <p className={`mb-6 text-2xl font-bold ${winner ? 'text-green-400 animate-bounce' : isRoomFull ? 'text-indigo-200' : 'text-gray-400 animate-pulse'}`}>{statusMessage}</p>
             
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full aspect-square p-4 sm:p-6 bg-white/5 rounded-2xl border border-white/10 mx-auto max-w-112.5">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full aspect-square p-4 sm:p-6 bg-white/5 rounded-2xl border border-white/10 mx-auto max-w-[450px]">
               {board.map((value, index) => {
                 const isOldest = (value === 'X' && index === oldestXMove) || (value === 'O' && index === oldestOMove);
                 return (
@@ -257,25 +260,25 @@ function App() {
                   const emptyBoard = Array(9).fill(null); const nextGameXStarts = !xStartedThisGame; 
                   setBoard(emptyBoard); setXIsNext(nextGameXStarts); setXMoves([]); setOMoves([]); setXStartedThisGame(nextGameXStarts);
                   socket.emit('move', { room: roomCode, board: emptyBoard, xIsNext: nextGameXStarts, xMoves: [], oMoves: [], xStarted: nextGameXStarts, scores: scores });
-                }} className="mt-6 w-full max-w-112.5 mx-auto bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 py-4 rounded-xl font-bold text-lg shadow-lg transform transition active:scale-95"
-              >Joacă din nou (Schimbă rândul)</button>
+                }} className="mt-6 w-full max-w-[450px] mx-auto bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 py-4 rounded-xl font-bold text-lg shadow-lg transform transition active:scale-95"
+              >Play again</button>
             )}
           </div>
 
-          {/* COLOANA 3: CHAT */}
-          <div className="lg:col-span-3 bg-white/10 backdrop-blur-lg p-6 rounded-3xl border border-white/20 shadow-2xl flex flex-col h-full min-h-125">
+          {/* COLUMN 3: CHAT */}
+          <div className="lg:col-span-3 bg-white/10 backdrop-blur-lg p-6 rounded-3xl border border-white/20 shadow-2xl flex flex-col h-full min-h-[500px]">
             <h2 className="text-2xl font-extrabold mb-4 text-center text-indigo-200">
-              Live Chat <span className="block text-sm font-normal opacity-70">{myRole === 'spectator' ? '(Doar Spectatori)' : '(Doar Jucători)'}</span>
+              Live Chat <span className="block text-sm font-normal opacity-70">{myRole === 'spectator' ? '(Spectators only)' : '(Players only)'}</span>
             </h2>
             
             <div className="bg-black/20 rounded-xl p-4 flex-1 overflow-y-auto flex flex-col gap-3 mb-4 shadow-inner text-left [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {visibleMessages.length === 0 ? (
-                <p className="text-center text-white/30 text-sm mt-auto mb-auto">Niciun mesaj încă în chat-ul {myRole === 'spectator' ? 'spectatorilor' : 'jucătorilor'}.</p>
+                <p className="text-center text-white/30 text-sm mt-auto mb-auto">No messages in {myRole === 'spectator' ? 'spectators' : 'players'}' chat.</p>
               ) : (
                 visibleMessages.map((msg, i) => (
                   <div key={i} className={`flex flex-col ${msg.username === playerData ? 'items-end' : 'items-start'}`}>
                     <span className="text-[11px] font-bold text-indigo-300 mb-1 px-1">{msg.username}</span>
-                    <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[85%] wrap-break-word shadow-md ${msg.username === playerData ? 'bg-linear-to-r from-purple-600 to-indigo-600 text-white rounded-tr-none' : 'bg-white/15 text-white rounded-tl-none border border-white/10'}`}>
+                    <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[85%] break-words shadow-md ${msg.username === playerData ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-tr-none' : 'bg-white/15 text-white rounded-tl-none border border-white/10'}`}>
                       {msg.text}
                     </div>
                   </div>
@@ -290,7 +293,7 @@ function App() {
                 value={currentMessage}
                 onChange={(e) => setCurrentMessage(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Scrie mesaj..." 
+                placeholder="Write a message..." 
                 className="flex-1 p-3 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-sm placeholder:text-white/30"
               />
               <button 
@@ -310,30 +313,31 @@ function App() {
   // ECRANUL 2: LOBBY
   if (isLoggedIn && !inRoom) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center text-white p-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center text-white p-4 py-8">
         <div className="bg-white/10 backdrop-blur-lg p-8 rounded-3xl shadow-2xl border border-white/20 w-full max-w-md text-center">
           <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
             <h1 className="text-2xl font-extrabold">Lobby</h1>
-            <button onClick={() => { setIsLoggedIn(false); setPlayerData(null); socket.disconnect(); }} className="bg-red-500/20 hover:bg-red-500/40 text-red-300 px-4 py-2 rounded-lg text-sm font-bold transition-all">Deconectare</button>
+            <button onClick={() => { setIsLoggedIn(false); setPlayerData(null); socket.disconnect(); }} className="bg-red-500/20 hover:bg-red-500/40 text-red-300 px-4 py-2 rounded-lg text-sm font-bold transition-all">Logout</button>
           </div>
-          <p className="text-indigo-200 mb-8">Salut, {playerData}! Introduceți un cod de cameră pentru a continua.</p>
+          <p className="text-indigo-200 mb-8">Hello, {playerData}! Insert room code to enter.</p>
           <div className="space-y-4">
-            <input type="text" placeholder="Ex: BGG2026" className="w-full p-4 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white/10 transition-all uppercase text-center font-bold tracking-widest" value={roomCode} onChange={(e) => setRoomCode(e.target.value.toUpperCase())} />
+            {/* Inputul previne acum orice spațiu gol, transformându-l automat în format valid */}
+            <input type="text" placeholder="Ex: BGG2026" className="w-full p-4 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white/10 transition-all uppercase text-center font-bold tracking-widest" value={roomCode} onChange={(e) => setRoomCode(e.target.value.toUpperCase().replace(/\s/g, ''))} />
             
             <div className="flex gap-4 pt-2">
               <button 
                 onClick={() => handleJoinRoom('player')} 
                 disabled={isRoomFullLobby}
-                className={`w-full py-4 rounded-xl font-bold text-sm shadow-lg transition-all ${isRoomFullLobby ? 'bg-gray-500/30 text-gray-400 cursor-not-allowed border border-gray-500/30' : 'bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500'}`}
+                className={`w-full py-4 rounded-xl font-bold text-sm shadow-lg transition-all ${isRoomFullLobby ? 'bg-gray-500/30 text-gray-400 cursor-not-allowed border border-gray-500/30' : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500'}`}
               >
-                {isRoomFullLobby ? 'Jucători Pli' : 'Intră ca Jucător'}
+                {isRoomFullLobby ? 'Room Full' : 'Join Player'}
               </button>
               
               <button 
                 onClick={() => handleJoinRoom('spectator')} 
-                className="w-full bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 py-4 rounded-xl font-bold text-sm shadow-lg transition-all"
+                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 py-4 rounded-xl font-bold text-sm shadow-lg transition-all"
               >
-                Intră Spectator
+                Join Spectator
               </button>
             </div>
             
@@ -345,17 +349,17 @@ function App() {
 
   // ECRANUL 1: AUTENTIFICARE
   return (
-    <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-800 to-indigo-900 flex items-center justify-center text-white p-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-900 flex items-center justify-center text-white p-4 py-8">
       <div className="bg-white/10 backdrop-blur-lg p-8 rounded-3xl shadow-2xl border border-white/20 w-full max-w-md">
-        <div className="text-center mb-8"><h1 className="text-4xl font-extrabold tracking-tight mb-2">Tic-Tac-Toe</h1><p className="text-indigo-200">Proiect Erasmus 2026</p></div>
+        <div className="text-center mb-8"><h1 className="text-4xl font-extrabold tracking-tight mb-2">Tic-Tac-Toe</h1><p className="text-indigo-200">Thomas's Erasmus 2026 Project</p></div>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-indigo-200 mb-2 ml-1">Nume Jucător</label>
-            <input type="text" placeholder="Ex: Oaia Verde" className="w-full p-4 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500" value={username} onChange={(e) => setUsername(e.target.value)} />
+            <label className="block text-sm font-medium text-indigo-200 mb-2 ml-1">Username</label>
+            <input type="text" placeholder="Ex: Green Sheep" className="w-full p-4 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500" value={username} onChange={(e) => setUsername(e.target.value)} />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-indigo-200 mb-2 ml-1">Parolă</label>
+            <label className="block text-sm font-medium text-indigo-200 mb-2 ml-1">Password</label>
             <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"} 
@@ -368,7 +372,7 @@ function App() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-300 transition-colors"
-                title={showPassword ? "Ascunde Parola" : "Arată Parola"}
+                title={showPassword ? "Hide Password" : "Show password"}
               >
                 {showPassword ? (
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -385,8 +389,8 @@ function App() {
           </div>
           
           <div className="flex gap-4 pt-4">
-            <button onClick={() => handleAuth('login')} className="w-full bg-white/10 hover:bg-white/20 py-3 rounded-xl font-bold text-md border border-white/20 transition-all active:scale-95">Logare</button>
-            <button onClick={() => handleAuth('register')} className="w-full bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 py-3 rounded-xl font-bold text-md transition-all active:scale-95">Creare Cont</button>
+            <button onClick={() => handleAuth('login')} className="w-full bg-white/10 hover:bg-white/20 py-3 rounded-xl font-bold text-md border border-white/20 transition-all active:scale-95">Login</button>
+            <button onClick={() => handleAuth('register')} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 py-3 rounded-xl font-bold text-md transition-all active:scale-95">Create account</button>
           </div>
         </div>
         {message && <div className="mt-6 p-3 rounded-lg text-center text-sm font-medium bg-red-500/20 text-red-200">{message}</div>}

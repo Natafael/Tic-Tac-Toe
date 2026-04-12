@@ -46,6 +46,7 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
+    #TODO: DE ADAUGAT VALIDARE
     data = request.json
     username = data.get('username')
     password = data.get('password')
