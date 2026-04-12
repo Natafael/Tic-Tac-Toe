@@ -22,7 +22,7 @@ active_users = {}
 def home():
     return {"message": "Server online!"}
 
-# --- NOU: Endpoint pentru a verifica dacă o cameră e plină (pentru butonul din Lobby) ---
+# --- Endpoint for checking if a room is full ---
 @app.route('/room_status/<room_code>', methods=['GET'])
 def room_status(room_code):
     if room_code in rooms_data:
@@ -35,14 +35,14 @@ def register():
     data = request.json
     username = data.get('username')
     password = data.get('password')
-    if not username or not password: return jsonify({"error": "Numele și parola sunt obligatorii!"}), 400
-    if User.query.filter_by(username=username).first(): return jsonify({"error": "Acest nume de utilizator există deja!"}), 409
+    if not username or not password: return jsonify({"error": "Username and password are required!"}), 400
+    if User.query.filter_by(username=username).first(): return jsonify({"error": "This username already exists!"}), 409
     
     hashed_password = generate_password_hash(password)
     new_user = User(username=username, password=hashed_password)
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({"message": "Utilizator creat cu succes!", "user_id": new_user.id}), 201
+    return jsonify({"message": "User created successfully!", "user_id": new_user.id}), 201
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -52,17 +52,17 @@ def login():
     password = data.get('password')
     force = data.get('force', False)
     
-    if not username or not password: return jsonify({"error": "Numele și parola sunt obligatorii!"}), 400
+    if not username or not password: return jsonify({"error": "Username and password are required!"}), 400
     user = User.query.filter_by(username=username).first()
     
     if user and check_password_hash(user.password, password):
         if username in active_users and not force:
             return jsonify({"error": "already_logged_in"}), 409
-        return jsonify({"message": f"Bine ai revenit, {username}!", "user_id": user.id}), 200
+        return jsonify({"message": f"Welcome back, {username}!", "user_id": user.id}), 200
     else:
-        return jsonify({"error": "Nume de utilizator sau parolă incorectă!"}), 401
+        return jsonify({"error": "Incorrect username or password!"}), 401
 
-# --- Funcție de ajutor pentru a trimite datele camerei în siguranță ---
+# --- Send room's data safely ---
 def get_safe_room_data(room):
     return {
         'X': rooms_data[room]['X'],
@@ -94,7 +94,7 @@ def on_register(data):
 def on_join(data):
     room = data['room']
     username = data['username']
-    role_request = data.get('role', 'player') # NOU: Aflăm dacă vrea să fie player sau spectator
+    role_request = data.get('role', 'player') # We get the desired role (player/spectator) from the client
     join_room(room)
     
     if room not in rooms_data:
@@ -115,7 +115,7 @@ def on_join(data):
         else:
             if username not in rooms_data[room]['spectators']: rooms_data[room]['spectators'].append(username)
     else:
-        # Vrea direct spectator
+        # If the user wants to be a spectator, we add them to the spectators list if they're not already a player
         if username not in rooms_data[room]['spectators']: rooms_data[room]['spectators'].append(username)
 
     emit('assign_symbol', {'symbol': my_symbol}, to=request.sid)
@@ -167,7 +167,7 @@ def handle_send_message(data):
     room = data['room']
     username = data['username']
     text = data['text']
-    chat_type = data.get('chat_type', 'player') # NOU: Primim tipul de chat (player/spectator)
+    chat_type = data.get('chat_type', 'player') # We get the chat type (player/spectator) from the client
     emit('receive_message', {'username': username, 'text': text, 'chat_type': chat_type}, to=room)
 
 if __name__ == '__main__':

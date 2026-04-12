@@ -41,7 +41,6 @@ function App() {
   const [isRoomFullLobby, setIsRoomFullLobby] = useState(false)
 
   useEffect(() => {
-    // Am adăugat trim() pentru siguranță când verificăm statusul
     if (roomCode.trim() !== '' && isLoggedIn && !inRoom) {
       fetch(`http://127.0.0.1:5000/room_status/${roomCode.trim()}`)
         .then(res => res.json())
@@ -108,10 +107,10 @@ function App() {
   }
 
   const handleJoinRoom = (role) => {
-    const cleanCode = roomCode.trim(); // Ne asigurăm că nu există spații invizibile
+    const cleanCode = roomCode.trim();
     if (!cleanCode) { setMessage("Insert room code!"); return; }
     socket.emit('join', { room: cleanCode, username: playerData, role: role });
-    setRoomCode(cleanCode); // Salvăm codul curat
+    setRoomCode(cleanCode);
     setInRoom(true); setMessage('');
   }
 
@@ -271,20 +270,24 @@ function App() {
               Live Chat <span className="block text-sm font-normal opacity-70">{myRole === 'spectator' ? '(Spectators only)' : '(Players only)'}</span>
             </h2>
             
-            <div className="bg-black/20 rounded-xl p-4 flex-1 overflow-y-auto flex flex-col gap-3 mb-4 shadow-inner text-left [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-              {visibleMessages.length === 0 ? (
-                <p className="text-center text-white/30 text-sm mt-auto mb-auto">No messages in {myRole === 'spectator' ? 'spectators' : 'players'}' chat.</p>
-              ) : (
-                visibleMessages.map((msg, i) => (
-                  <div key={i} className={`flex flex-col ${msg.username === playerData ? 'items-end' : 'items-start'}`}>
-                    <span className="text-[11px] font-bold text-indigo-300 mb-1 px-1">{msg.username}</span>
-                    <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[85%] break-words shadow-md ${msg.username === playerData ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-tr-none' : 'bg-white/15 text-white rounded-tl-none border border-white/10'}`}>
-                      {msg.text}
+            {/* --- SOLUȚIA MAGICĂ: AICI E FIXUL! --- */}
+            {/* Am transformat acest container flex-1 într-unul "relative", și am băgat chat-ul într-un spațiu "absolute" ca să nu mai dicteze el înălțimea paginii. */}
+            <div className="flex-1 relative mb-4">
+              <div className="absolute inset-0 bg-black/20 rounded-xl p-4 overflow-y-auto flex flex-col gap-3 shadow-inner text-left [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                {visibleMessages.length === 0 ? (
+                  <p className="text-center text-white/30 text-sm mt-auto mb-auto">No messages in {myRole === 'spectator' ? 'spectators' : 'players'}' chat.</p>
+                ) : (
+                  visibleMessages.map((msg, i) => (
+                    <div key={i} className={`flex flex-col ${msg.username === playerData ? 'items-end' : 'items-start'}`}>
+                      <span className="text-[11px] font-bold text-indigo-300 mb-1 px-1">{msg.username}</span>
+                      <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[85%] break-words shadow-md ${msg.username === playerData ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-tr-none' : 'bg-white/15 text-white rounded-tl-none border border-white/10'}`}>
+                        {msg.text}
+                      </div>
                     </div>
-                  </div>
-                ))
-              )}
-              <div ref={messagesEndRef} />
+                  ))
+                )}
+                <div ref={messagesEndRef} />
+              </div>
             </div>
             
             <div className="flex gap-2 shrink-0">
@@ -321,7 +324,6 @@ function App() {
           </div>
           <p className="text-indigo-200 mb-8">Hello, {playerData}! Insert room code to enter.</p>
           <div className="space-y-4">
-            {/* Inputul previne acum orice spațiu gol, transformându-l automat în format valid */}
             <input type="text" placeholder="Ex: BGG2026" className="w-full p-4 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white/10 transition-all uppercase text-center font-bold tracking-widest" value={roomCode} onChange={(e) => setRoomCode(e.target.value.toUpperCase().replace(/\s/g, ''))} />
             
             <div className="flex gap-4 pt-2">
